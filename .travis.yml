@@ -1,0 +1,36 @@
+language: node_js
+node_js:
+  - '11.13'
+branches:
+  only:
+    - master
+cache:
+  directories:
+    - node_modules
+stages:
+  - deploy
+jobs:
+  include:
+    - stage: deploy
+      before_install:
+        - openssl aes-256-cbc -K $encrypted_a96176879ff1_key -iv $encrypted_a96176879ff1_iv -in .travis/id_rsa.enc -out ~/.ssh/id_rsa -d
+        - chmod 600 ~/.ssh/id_rsa
+        - eval $(ssh-agent)
+        - ssh-add ~/.ssh/id_rsa
+        - cp .travis/ssh_config ~/.ssh/config
+        - git config --global user.name 'aha2mao'
+        - git config --global user.email aha2mao@gmail.com
+      install:
+        - npm install hexo-cli -g
+        - npm install
+      script:
+        - npm run deploy
+      deploy:
+        provider: pages
+        skip-cleanup: true
+        github-token: $GH_TOKEN
+        local-dir: public
+        target-branch: gh-pages
+        verbose: true
+        on:
+          branch: master
